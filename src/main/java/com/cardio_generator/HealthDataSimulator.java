@@ -1,39 +1,61 @@
+
 package com.cardio_generator;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import com.cardio_generator.generators.AlertGenerator;
-
-import com.cardio_generator.generators.BloodPressureDataGenerator;
-import com.cardio_generator.generators.BloodSaturationDataGenerator;
-import com.cardio_generator.generators.BloodLevelsDataGenerator;
-import com.cardio_generator.generators.ECGDataGenerator;
-import com.cardio_generator.outputs.ConsoleOutputStrategy;
-import com.cardio_generator.outputs.fileOutputStrategy;
-import com.cardio_generator.outputs.OutputStrategy;
-import com.cardio_generator.outputs.TcpOutputStrategy;
-import com.cardio_generator.outputs.WebSocketOutputStrategy;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import com.cardio_generator.generators.AlertGenerator;
+import com.cardio_generator.generators.BloodLevelsDataGenerator;
+import com.cardio_generator.generators.BloodPressureDataGenerator;
+import com.cardio_generator.generators.BloodSaturationDataGenerator;
+import com.cardio_generator.generators.ECGDataGenerator;
+import com.cardio_generator.outputs.ConsoleOutputStrategy;
+import com.cardio_generator.outputs.FileOutputStrategy;
+import com.cardio_generator.outputs.OutputStrategy;
+import com.cardio_generator.outputs.TcpOutputStrategy;
+import com.cardio_generator.outputs.WebSocketOutputStrategy;
+
+/**
+ * This class makes fake health data for patients and shows it in different ways.
+ * <pre>
+ * java HealthDataSimulator --patient-count 100 --output file:./output
+ * </pre>
+ * That makes data for 100 patients and puts it in files in the "output" folder.
+ */
 public class HealthDataSimulator {
 
-    private static int patientCount = 50; // Default number of patients
+    /** How many patients we are making data for; it starts at 50 unless we change it. */
+    private static int patientCount = 50;
+
+    /** This thing runs our tasks on a schedule. */
     private static ScheduledExecutorService scheduler;
-    private static OutputStrategy outputStrategy = new ConsoleOutputStrategy(); // Default output strategy
+
+    /** Where the data goes-like to the console or a file; starts with console. */
+    private static OutputStrategy outputStrategy = new ConsoleOutputStrategy();
+
+    /** A random number randomizer to mix things up when we start tasks. */
     private static final Random random = new Random();
 
+    /**
+     * Starts the whole program and sets everything up.
+     * This is the main method we run to start making fake health data It looks at what we type
+     * in the command line (like how many patients) and gets everything ready. I had to look up
+     * what "args" means-it is the stuff we type when we run the program. It can make files if we
+     * pick file output, which might cause an error, so I added that in the notes!
+     *
+     * @param args stuff we type in the command line, like "--patient-count 100"
+     * @throws IOException if something goes wrong making folders for file output
+     */
     public static void main(String[] args) throws IOException {
-
         parseArguments(args);
 
         scheduler = Executors.newScheduledThreadPool(patientCount * 4);
@@ -44,6 +66,13 @@ public class HealthDataSimulator {
         scheduleTasksForPatients(patientIds);
     }
 
+    /**
+     * Looks at what we typed in the command line and sets up the program.
+     * This method checks what we typed, like how many patients or where to send the data.
+     *
+     * @param args the words we typed in the command line
+     * @throws IOException if it cant make a folder for file output
+     */
     private static void parseArguments(String[] args) throws IOException {
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
@@ -72,11 +101,10 @@ public class HealthDataSimulator {
                             if (!Files.exists(outputPath)) {
                                 Files.createDirectories(outputPath);
                             }
-                            outputStrategy = new fileOutputStrategy(baseDirectory);
+                            outputStrategy = new FileOutputStrategy(baseDirectory);
                         } else if (outputArg.startsWith("websocket:")) {
                             try {
                                 int port = Integer.parseInt(outputArg.substring(10));
-                                // Initialize your WebSocket output strategy here
                                 outputStrategy = new WebSocketOutputStrategy(port);
                                 System.out.println("WebSocket output will be on port: " + port);
                             } catch (NumberFormatException e) {
@@ -86,7 +114,6 @@ public class HealthDataSimulator {
                         } else if (outputArg.startsWith("tcp:")) {
                             try {
                                 int port = Integer.parseInt(outputArg.substring(4));
-                                // Initialize your TCP socket output strategy here
                                 outputStrategy = new TcpOutputStrategy(port);
                                 System.out.println("TCP socket output will be on port: " + port);
                             } catch (NumberFormatException e) {
@@ -105,6 +132,12 @@ public class HealthDataSimulator {
         }
     }
 
+    /**
+     * Shows how to use the program if we need help.
+     * This method prints a big help message to the screen! It tells us how to run the program
+     * and what options we can use, like how many patients or where the data goes. It prints stuff
+     * to the screen, which is the only thing it does besides that.
+     */
     private static void printHelp() {
         System.out.println("Usage: java HealthDataSimulator [options]");
         System.out.println("Options:");
@@ -122,7 +155,17 @@ public class HealthDataSimulator {
                 "  This command simulates data for 100 patients and sends the output to WebSocket clients connected to port 8080.");
     }
 
+    /**
+     * Makes a list of patient IDs to use in the simulation.
+     *
+     * @param patientCount how many patients we want; gotta be a positive number
+     * @return a list of numbers from 1 to patientCount for the patients
+     * @throws IllegalArgumentException if patientCount is 0 or less 
+     */
     private static List<Integer> initializePatientIds(int patientCount) {
+        if (patientCount <= 0) {
+            throw new IllegalArgumentException("Patient count must be positive");
+        }
         List<Integer> patientIds = new ArrayList<>();
         for (int i = 1; i <= patientCount; i++) {
             patientIds.add(i);
@@ -130,7 +173,16 @@ public class HealthDataSimulator {
         return patientIds;
     }
 
+    /**
+     * Sets up all the tasks to make data for each patient.
+     *
+     * @param patientIds the list of patient numbers we're making data for; can't be null or empty
+     * @throws IllegalArgumentException if the patientIds list is null or empty
+     */
     private static void scheduleTasksForPatients(List<Integer> patientIds) {
+        if (patientIds == null || patientIds.isEmpty()) {
+            throw new IllegalArgumentException("Patient IDs list must not be null or empty");
+        }
         ECGDataGenerator ecgDataGenerator = new ECGDataGenerator(patientCount);
         BloodSaturationDataGenerator bloodSaturationDataGenerator = new BloodSaturationDataGenerator(patientCount);
         BloodPressureDataGenerator bloodPressureDataGenerator = new BloodPressureDataGenerator(patientCount);
@@ -146,7 +198,24 @@ public class HealthDataSimulator {
         }
     }
 
+    /**
+     * Plans a task to run over and over with a little random wait at the start.
+     *
+     * @param task the job we want to do, like making data; can't be null
+     * @param period how often to do the task, like every 1 second; has to be a positive number
+     * @param timeUnit what kind of time we're using, like seconds or minutes; can't be null
+     * @throws IllegalArgumentException if task or timeUnit is null, or if period isn't positive
+     */
     private static void scheduleTask(Runnable task, long period, TimeUnit timeUnit) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task must not be null");
+        }
+        if (period <= 0) {
+            throw new IllegalArgumentException("Period must be positive");
+        }
+        if (timeUnit == null) {
+            throw new IllegalArgumentException("Time unit must not be null");
+        }
         scheduler.scheduleAtFixedRate(task, random.nextInt(5), period, timeUnit);
     }
 }

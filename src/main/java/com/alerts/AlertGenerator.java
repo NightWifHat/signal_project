@@ -29,8 +29,7 @@ public class AlertGenerator {
      * are met. If a condition is met, an alert is triggered via the
      * {@link #triggerAlert}
      * method. This method should define the specific conditions under which an
-     * alert
-     * will be triggered.
+     * alert will be triggered.
      *
      * @param patient the patient data to evaluate for alert conditions
      */
@@ -39,14 +38,11 @@ public class AlertGenerator {
     }
 
     /**
-     * Triggers an alert for the monitoring system. This method can be extended to
-     * notify medical staff, log the alert, or perform other actions. The method
-     * currently assumes that the alert information is fully formed when passed as
-     * an argument.
+     * Triggers an alert for the monitoring system. 
      *
      * @param alert the alert object containing details about the alert condition
      */
     private void triggerAlert(Alert alert) {
-        // Implementation might involve logging the alert or notifying staff
+        // Implementation might involve logging the alert or notifying staff?
     }
 }
