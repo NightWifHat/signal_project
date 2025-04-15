@@ -1,0 +1,27 @@
+@startuml PatientIdentificationSystem
+
+' Classes
+class PatientIdentifier {
+  +matchPatient(patientId: int): PatientRecord
+}
+
+class PatientRecord {
+  -patientId: int
+  -name: String
+  -medicalHistory: String
+  +getPatientId(): int
+  +getName(): String
+  +getMedicalHistory(): String
+}
+
+class IdentityManager {
+  -records: Map<Integer, PatientRecord>
+  +handleMismatch(patientId: int): void
+  +addRecord(record: PatientRecord): void
+}
+
+' Relationships
+PatientIdentifier "1" -- "1" IdentityManager : uses
+IdentityManager "1" -- "*" PatientRecord : manages
+
+@enduml

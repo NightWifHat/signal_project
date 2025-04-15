@@ -66,3 +66,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Project Members
 - Student ID: I6395767
+
+## UML Models (Week 2)
+
+For Week 2, we created UML class diagrams for four subsystems of the Cardio Data Simulator:
+
+- **Alert Generation System**: Handles real-time alert generation based on patient data thresholds.
+- **Data Storage System**: Manages secure storage, retrieval, and deletion of patient data.
+- **Patient Identification System**: Links incoming data to the correct patient records.
+- **Data Access Layer**: Retrieves and parses data from external sources (TCP, WebSocket, files).
+
+The diagrams and their explanations are in the [uml_models](uml_models/) directory.
