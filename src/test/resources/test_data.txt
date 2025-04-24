@@ -1,7 +1,11 @@
 1,190.0,BloodPressure,1714376789050
+1,120.0,DiastolicBloodPressure,1714376789050
 1,201.0,BloodPressure,1714376789051
+1,131.0,DiastolicBloodPressure,1714376789051
 1,212.0,BloodPressure,1714376789052
+1,142.0,DiastolicBloodPressure,1714376789052
 1,80.0,BloodPressure,1714376789053
+1,50.0,DiastolicBloodPressure,1714376789053
 1,91.0,BloodSaturation,1714376789054
 1,86.0,BloodSaturation,1714376789055
 1,1.0,ECG,1714376789056
