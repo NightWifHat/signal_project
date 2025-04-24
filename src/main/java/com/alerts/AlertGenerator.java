@@ -61,25 +61,17 @@ public class AlertGenerator {
     }
 
     private void checkBloodPressureAlerts(String patientId, List<PatientRecord> records) {
-        // Critical Threshold Alerts
+        // Critical Threshold Alerts (assuming measurementValue is systolic BP)
         for (PatientRecord record : records) {
             if (record.getRecordType().equals("BloodPressure")) {
-                // Assuming measurementValue is a string like "120/80"
                 try {
-                    String[] parts = String.valueOf(record.getMeasurementValue()).split("/");
-                    if (parts.length != 2) continue;
-                    double systolic = Double.parseDouble(parts[0]);
-                    double diastolic = Double.parseDouble(parts[1]);
+                    double systolic = record.getMeasurementValue();
                     if (systolic > 180) {
                         triggerAlert(new Alert(patientId, "Critical: Systolic BP above 180 mmHg", record.getTimestamp()));
                     } else if (systolic < 90) {
                         triggerAlert(new Alert(patientId, "Critical: Systolic BP below 90 mmHg", record.getTimestamp()));
                     }
-                    if (diastolic > 120) {
-                        triggerAlert(new Alert(patientId, "Critical: Diastolic BP above 120 mmHg", record.getTimestamp()));
-                    } else if (diastolic < 60) {
-                        triggerAlert(new Alert(patientId, "Critical: Diastolic BP below 60 mmHg", record.getTimestamp()));
-                    }
+                    // Diastolic not handled until PatientRecord.java clarifies format
                 } catch (Exception e) {
                     System.err.println("Error parsing BloodPressure record: " + record.getMeasurementValue());
                 }
@@ -94,7 +86,6 @@ public class AlertGenerator {
             }
         }
         checkBloodPressureTrend(patientId, bpRecords, "systolic");
-        checkBloodPressureTrend(patientId, bpRecords, "diastolic");
     }
 
     private void checkBloodPressureTrend(String patientId, List<PatientRecord> bpRecords, String type) {
@@ -105,23 +96,18 @@ public class AlertGenerator {
                 PatientRecord r1 = bpRecords.get(i - 2);
                 PatientRecord r2 = bpRecords.get(i - 1);
                 PatientRecord r3 = bpRecords.get(i);
-                String[] parts1 = String.valueOf(r1.getMeasurementValue()).split("/");
-                String[] parts2 = String.valueOf(r2.getMeasurementValue()).split("/");
-                String[] parts3 = String.valueOf(r3.getMeasurementValue()).split("/");
-                if (parts1.length != 2 || parts2.length != 2 || parts3.length != 2) continue;
-
-                double v1 = type.equals("systolic") ? Double.parseDouble(parts1[0]) : Double.parseDouble(parts1[1]);
-                double v2 = type.equals("systolic") ? Double.parseDouble(parts2[0]) : Double.parseDouble(parts2[1]);
-                double v3 = type.equals("systolic") ? Double.parseDouble(parts3[0]) : Double.parseDouble(parts3[1]);
+                double v1 = r1.getMeasurementValue();
+                double v2 = r2.getMeasurementValue();
+                double v3 = r3.getMeasurementValue();
 
                 // Increasing trend
                 if (v2 - v1 > 10 && v3 - v2 > 10) {
-                    triggerAlert(new Alert(patientId, "Trend: Three consecutive " + type + " BP increases > 10 mmHg",
+                    triggerAlert(new Alert(patientId, "Trend: Three consecutive systolic BP increases > 10 mmHg",
                             r3.getTimestamp()));
                 }
                 // Decreasing trend
                 if (v1 - v2 > 10 && v2 - v3 > 10) {
-                    triggerAlert(new Alert(patientId, "Trend: Three consecutive " + type + " BP decreases > 10 mmHg",
+                    triggerAlert(new Alert(patientId, "Trend: Three consecutive systolic BP decreases > 10 mmHg",
                             r3.getTimestamp()));
                 }
             } catch (Exception e) {
@@ -160,9 +146,7 @@ public class AlertGenerator {
         for (PatientRecord bpRecord : records) {
             if (bpRecord.getRecordType().equals("BloodPressure")) {
                 try {
-                    String[] parts = String.valueOf(bpRecord.getMeasurementValue()).split("/");
-                    if (parts.length != 2) continue;
-                    double systolic = Double.parseDouble(parts[0]);
+                    double systolic = bpRecord.getMeasurementValue();
                     if (systolic < 90) {
                         // Check for low saturation within 1 minute
                         for (PatientRecord satRecord : records) {
