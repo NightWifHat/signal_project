@@ -18,7 +18,7 @@ public class FileDataReaderTest {
     @BeforeEach
     void setUp() {
         dataStorage = new DataStorage();
-        fileDataReader = new FileDataReader();
+        fileDataReader = new FileDataReader("dummy_path.txt"); // Fixed constructor call
     }
 
     @Test
@@ -30,7 +30,8 @@ public class FileDataReaderTest {
             "1,120.0,DiastolicBloodPressure,1714376789050"
         ));
 
-        fileDataReader.readData(dataStorage, tempFile.toString());
+        fileDataReader = new FileDataReader(tempFile.toString());
+        fileDataReader.readData(dataStorage); // Fixed readData call
 
         List<PatientRecord> records = dataStorage.getRecords(1, 0, Long.MAX_VALUE);
         assertEquals(2, records.size());
@@ -42,8 +43,9 @@ public class FileDataReaderTest {
 
     @Test
     void testReadDataWithInvalidFile() {
+        fileDataReader = new FileDataReader("nonexistent_file.txt");
         assertThrows(IOException.class, () -> {
-            fileDataReader.readData(dataStorage, "nonexistent_file.txt");
+            fileDataReader.readData(dataStorage); // Fixed readData call
         }, "Expected IOException for nonexistent file");
     }
 
@@ -55,8 +57,9 @@ public class FileDataReaderTest {
             "1,abc,BloodPressure,1714376789050" // Invalid measurement value
         ));
 
+        fileDataReader = new FileDataReader(tempFile.toString());
         assertThrows(IllegalArgumentException.class, () -> {
-            fileDataReader.readData(dataStorage, tempFile.toString());
+            fileDataReader.readData(dataStorage); // Fixed readData call
         }, "Expected IllegalArgumentException for malformed data");
     }
 }
