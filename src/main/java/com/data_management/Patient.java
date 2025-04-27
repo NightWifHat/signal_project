@@ -58,8 +58,12 @@ public class Patient {
      * @param endTime   the end of the time range, in milliseconds since UNIX epoch
      * @return a list of PatientRecord objects that fall within the specified time
      *         range
+     * @throws IllegalArgumentException if startTime is greater than endTime
      */
     public List<PatientRecord> getRecords(long startTime, long endTime) {
+        if (startTime > endTime) {
+            throw new IllegalArgumentException("Start time cannot be greater than end time");
+        }
         List<PatientRecord> filteredRecords = new ArrayList<>();
         for (PatientRecord record : patientRecords) {
             if (record.getTimestamp() >= startTime && record.getTimestamp() <= endTime) {
