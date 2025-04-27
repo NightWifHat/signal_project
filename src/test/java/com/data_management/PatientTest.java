@@ -17,9 +17,9 @@ public class PatientTest {
 
     @Test
     void testGetRecordsWithinTimeRange() {
-        patient.addRecord(new PatientRecord(1, 100.0, "BloodPressure", 1000L));
-        patient.addRecord(new PatientRecord(1, 110.0, "BloodPressure", 2000L));
-        patient.addRecord(new PatientRecord(1, 120.0, "BloodPressure", 3000L));
+        patient.addRecord(100.0, "BloodPressure", 1000L); // Fixed addRecord call
+        patient.addRecord(110.0, "BloodPressure", 2000L); // Fixed addRecord call
+        patient.addRecord(120.0, "BloodPressure", 3000L); // Fixed addRecord call
 
         List<PatientRecord> records = patient.getRecords(1500L, 2500L);
         assertEquals(1, records.size());
@@ -28,7 +28,7 @@ public class PatientTest {
 
     @Test
     void testGetRecordsNoRecordsInRange() {
-        patient.addRecord(new PatientRecord(1, 100.0, "BloodPressure", 1000L));
+        patient.addRecord(100.0, "BloodPressure", 1000L); // Fixed addRecord call
 
         List<PatientRecord> records = patient.getRecords(2000L, 3000L);
         assertTrue(records.isEmpty());
@@ -36,7 +36,7 @@ public class PatientTest {
 
     @Test
     void testGetRecordsInvalidTimeRange() {
-        patient.addRecord(new PatientRecord(1, 100.0, "BloodPressure", 1000L));
+        patient.addRecord(100.0, "BloodPressure", 1000L); // Fixed addRecord call
 
         assertThrows(IllegalArgumentException.class, () -> {
             patient.getRecords(3000L, 2000L);
