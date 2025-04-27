@@ -39,15 +39,15 @@ public class MainTest {
         ));
 
         try {
-            Main.main(new String[]{tempFile.toString()});
+            Main.main(new String[]{"ProcessFile", tempFile.toString()}); // Added "ProcessFile" mode
         } catch (ExitException e) {
-            // If System.exit is called, we can ignore it since we're testing output
+            fail("Main should not call System.exit with valid arguments");
         }
 
         String output = outContent.toString();
-        assertTrue(output.contains("Evaluating patient: 1"));
-        assertTrue(output.contains("Critical: Systolic BP above 180 mmHg"));
-        assertTrue(output.contains("Critical: Diastolic BP above 110 mmHg"));
+        assertTrue(output.contains("Evaluating patient: 1"), "Expected patient evaluation message");
+        assertTrue(output.contains("Critical: Systolic BP above 180 mmHg"), "Expected systolic BP alert");
+        assertTrue(output.contains("Critical: Diastolic BP above 110 mmHg"), "Expected diastolic BP alert");
         outContent.reset();
     }
 
@@ -58,7 +58,7 @@ public class MainTest {
         System.setErr(new PrintStream(errContent));
 
         try {
-            Main.main(new String[]{});
+            Main.main(new String[]{"InvalidMode"}); // Use an invalid mode to trigger usage message
             fail("Expected ExitException due to invalid arguments");
         } catch (ExitException e) {
             assertEquals(1, e.status, "Expected exit code 1 for invalid arguments");
@@ -67,7 +67,8 @@ public class MainTest {
         }
 
         String errOutput = errContent.toString();
-        assertTrue(errOutput.contains("Usage: java com.cardio_generator.Main <data-file-path>"));
+        assertTrue(errOutput.contains("Modes: DataStorage, HealthDataSimulator, ProcessFile"),
+                   "Expected usage message with invalid args");
 
         // Restore System.err
         System.setErr(originalErr);
