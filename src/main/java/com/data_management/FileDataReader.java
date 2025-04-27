@@ -29,6 +29,7 @@ public class FileDataReader implements DataReader {
      *
      * @param dataStorage the storage where data will be stored
      * @throws IOException if there is an error reading the file
+     * @throws IllegalArgumentException if the data format is invalid
      */
     @Override
     public void readData(DataStorage dataStorage) throws IOException {
@@ -43,8 +44,7 @@ public class FileDataReader implements DataReader {
                 // Parse the line
                 String[] parts = line.split(",");
                 if (parts.length != 4) {
-                    System.err.println("Invalid data format in line: " + line);
-                    continue;
+                    throw new IllegalArgumentException("Invalid data format in line: " + line);
                 }
                 try {
                     int patientId = Integer.parseInt(parts[0].trim());
@@ -54,7 +54,7 @@ public class FileDataReader implements DataReader {
                     // Add the record to DataStorage
                     dataStorage.addPatientData(patientId, measurementValue, recordType, timestamp);
                 } catch (NumberFormatException e) {
-                    System.err.println("Error parsing line: " + line + " - " + e.getMessage());
+                    throw new IllegalArgumentException("Error parsing line: " + line + " - " + e.getMessage(), e);
                 }
             }
         }
