@@ -1,30 +1,47 @@
 package com.cardio_generator;
 
-import com.alerts.AlertGenerator;
-import com.data_management.DataStorage;
-import com.data_management.FileDataReader;
-import com.data_management.Patient;
-
+import com.cardio_generator.outputs.*;
+import com.data_management.*;
 import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        // Check for file path argument
-        if (args.length != 1) {
-            System.err.println("Usage: java com.cardio_generator.Main <data-file-path>");
+        if (args.length == 0) {
+            System.err.println("Usage: java com.cardio_generator.Main <mode> [data-file-path]");
+            System.err.println("Modes: DataStorage, HealthDataSimulator, ProcessFile");
             System.exit(1);
         }
 
-        String filePath = args[0];
-        // Initialize DataStorage with FileDataReader
-        DataStorage storage = new DataStorage(new FileDataReader(filePath));
-        storage.readData();
+        String mode = args[0];
+        switch (mode) {
+            case "DataStorage":
+                DataStorage.main(new String[]{});
+                break;
+            case "HealthDataSimulator":
+                HealthDataSimulator.main(new String[]{});
+                break;
+            case "ProcessFile":
+                if (args.length != 2) {
+                    System.err.println("Usage for ProcessFile: java com.cardio_generator.Main ProcessFile <data-file-path>");
+                    System.exit(1);
+                }
+                processFile(args[1]);
+                break;
+            default:
+                System.err.println("Unknown mode: " + mode);
+                System.err.println("Modes: DataStorage, HealthDataSimulator, ProcessFile");
+                System.exit(1);
+        }
+    }
 
-        // Initialize AlertGenerator
-        AlertGenerator alertGenerator = new AlertGenerator(storage);
+    private static void processFile(String filePath) throws IOException {
+        DataStorage dataStorage = new DataStorage();
+        FileDataReader reader = new FileDataReader();
+        reader.readData(dataStorage, filePath);
 
-        // Evaluate data for all patients
-        for (Patient patient : storage.getAllPatients()) {
+        OutputStrategy outputStrategy = new ConsoleOutputStrategy();
+        AlertGenerator alertGenerator = new AlertGenerator(dataStorage, outputStrategy);
+        for (Patient patient : dataStorage.getAllPatients()) {
             System.out.println("Evaluating patient: " + patient.getPatientId());
             alertGenerator.evaluateData(patient);
         }
