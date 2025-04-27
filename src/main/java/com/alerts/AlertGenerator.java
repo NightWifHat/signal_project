@@ -1,5 +1,6 @@
 package com.alerts;
 
+import com.cardio_generator.outputs.OutputStrategy; // Added import
 import com.data_management.DataStorage;
 import com.data_management.Patient;
 import com.data_management.PatientRecord;
@@ -9,11 +10,13 @@ import java.util.List;
 
 public class AlertGenerator {
     private DataStorage dataStorage;
+    private OutputStrategy outputStrategy; // Added field
     private static final long TEN_MINUTES = 10 * 60 * 1000;
     private static final int SLIDING_WINDOW_SIZE = 5;
 
-    public AlertGenerator(DataStorage dataStorage) {
+    public AlertGenerator(DataStorage dataStorage, OutputStrategy outputStrategy) {
         this.dataStorage = dataStorage;
+        this.outputStrategy = outputStrategy; // Store the OutputStrategy
     }
 
     public void evaluateData(Patient patient) {
@@ -164,7 +167,8 @@ public class AlertGenerator {
     }
 
     private void triggerAlert(Alert alert) {
-        System.out.println("ALERT: Patient ID: " + alert.getPatientId() + ", Condition: " + alert.getCondition() +
-                ", Timestamp: " + alert.getTimestamp());
+        outputStrategy.output(Integer.parseInt(alert.getPatientId()), alert.getTimestamp(),
+                "ALERT: Patient ID: " + alert.getPatientId() + ", Condition: " + alert.getCondition(),
+                alert.getCondition());
     }
 }
