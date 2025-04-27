@@ -1,0 +1,12 @@
+Code Coverage Report:
+- JaCoCo Coverage: 41% instruction coverage, 48% branch coverage
+- Untested Parts:
+  - com.cardio_generator (0% instruction coverage):
+    - HealthDataSimulator: Provided code but, not required to be tested for Week 3.
+    - Main: Tested in MainTest but new command-line mode selection logic has untested paths (e.g., error handling for invalid modes).
+  - com.cardio_generator.outputs (10% instruction coverage):
+    - Output strategies like ConsoleOutputStrategy, WebSocketOutputStrategy, and FileOutputStrategy are untested. Focused on TcpOutputStrategy as its used in the main workflow..
+  - com.data_management (30% instruction coverage):
+    - PatientRecord: Simple data class, minimal logic not tested
+    - Edge cases in DataStorage and Patient (e.g., large datasets, concurrent access) are untested.
+- Reason: Focused testing on core functionalities required by Week 3 (AlertGenerator, FileDataReader, Patient.getRecords TcpOutputStrategy). Additional tests for provided classes and other output strategies can be added in future versions.
