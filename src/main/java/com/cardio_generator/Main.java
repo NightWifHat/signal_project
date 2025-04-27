@@ -2,6 +2,7 @@ package com.cardio_generator;
 
 import com.cardio_generator.outputs.*;
 import com.data_management.*;
+import com.alerts.AlertGenerator; // Added missing import
 import java.io.IOException;
 
 public class Main {
@@ -36,8 +37,8 @@ public class Main {
 
     private static void processFile(String filePath) throws IOException {
         DataStorage dataStorage = new DataStorage();
-        FileDataReader reader = new FileDataReader();
-        reader.readData(dataStorage, filePath);
+        FileDataReader reader = new FileDataReader(filePath); // Pass the file path to the constructor
+        reader.readData(dataStorage); // Call readData with only DataStorage
 
         OutputStrategy outputStrategy = new ConsoleOutputStrategy();
         AlertGenerator alertGenerator = new AlertGenerator(dataStorage, outputStrategy);
