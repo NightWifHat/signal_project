@@ -77,3 +77,11 @@ For Week 2, we created UML class diagrams for four subsystems of the Cardio Data
 - **Data Access Layer**: Retrieves and parses data from external sources (TCP, WebSocket, files).
 
 The diagrams and their explanations are in the [uml_models](uml_models/) directory.
+
+## Week 3 Updates
+For Week 3, we implemented the core functionalities of the Cardio Generator Project, including:
+- **Alert Generation**: Implemented `AlertGenerator` to detect critical conditions (e.g., high/low blood pressure, low saturation, ECG peaks) and generate alerts using the `OutputStrategy` pattern.
+- **Data Processing**: Enhanced `FileDataReader` and `Patient` classes to handle patient data parsing and validation, including throwing exceptions for malformed data and invalid time ranges.
+- **Testing**: Added and fixed unit tests across all components (`AlertGeneratorTest`, `MainTest`, `FileDataReaderTest`, `PatientTest`, etc.), achieving a total of 27 passing tests.
+- **Code Coverage**: Generated a JaCoCo report showing 41% instruction coverage and 48% branch coverage (see `coverage_report.txt` for details).
+- **Verification**: Documented test results in `test_verification.txt`, confirming all tests pass with no failures.
