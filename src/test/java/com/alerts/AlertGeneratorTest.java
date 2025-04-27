@@ -47,12 +47,42 @@ public class AlertGeneratorTest {
     }
 
     @Test
+    void testDiastolicBloodPressureCriticalHighAlert() {
+        Patient patient = storage.getAllPatients().get(0);
+        alertGenerator.evaluateData(patient);
+        String output = outContent.toString();
+        assertTrue(output.contains("Critical: Diastolic BP above 110 mmHg"),
+                   "Expected critical high diastolic blood pressure alert");
+        outContent.reset();
+    }
+
+    @Test
+    void testDiastolicBloodPressureCriticalLowAlert() {
+        Patient patient = storage.getAllPatients().get(0);
+        alertGenerator.evaluateData(patient);
+        String output = outContent.toString();
+        assertTrue(output.contains("Critical: Diastolic BP below 60 mmHg"),
+                   "Expected critical low diastolic blood pressure alert");
+        outContent.reset();
+    }
+
+    @Test
     void testBloodPressureTrendAlert() {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         String output = outContent.toString();
         assertTrue(output.contains("Trend: Three consecutive systolic BP increases > 10 mmHg"),
-                   "Expected blood pressure trend alert");
+                   "Expected systolic blood pressure trend alert");
+        outContent.reset();
+    }
+
+    @Test
+    void testDiastolicBloodPressureTrendAlert() {
+        Patient patient = storage.getAllPatients().get(0);
+        alertGenerator.evaluateData(patient);
+        String output = outContent.toString();
+        assertTrue(output.contains("Trend: Three consecutive diastolic BP increases > 10 mmHg"),
+                   "Expected diastolic blood pressure trend alert");
         outContent.reset();
     }
 
