@@ -1,6 +1,6 @@
 package com.alerts;
 
-import com.cardio_generator.outputs.OutputStrategy; // Added import
+import com.cardio_generator.outputs.OutputStrategy;
 import com.data_management.DataStorage;
 import com.data_management.FileDataReader;
 import com.data_management.Patient;
@@ -16,15 +16,15 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AlertGeneratorTest {
     private DataStorage storage;
     private AlertGenerator alertGenerator;
-    private TestOutputStrategy outputStrategy; // Custom OutputStrategy to capture alerts
-
-    // Custom OutputStrategy to capture alerts for testing
-    private static class TestOutputStrategy implements OutputStrategy {
+    private TestOutputStrategy outputStrategy;    private static class TestOutputStrategy implements OutputStrategy {
         private final List<String> alerts = new ArrayList<>();
+        private boolean alertTriggered = false;
 
         @Override
         public void output(int patientId, long timestamp, String label, String data) {
-            alerts.add(label); // Capture the label (which includes the alert message)
+            System.out.println("Alert triggered: " + label);  // Debug output
+            alerts.add(label);
+            alertTriggered = true;  // Set flag indicating alert was triggered
         }
 
         public List<String> getAlerts() {
@@ -33,15 +33,23 @@ public class AlertGeneratorTest {
 
         public void clear() {
             alerts.clear();
+            alertTriggered = false;  // Reset flag when clearing
+        }
+        
+        public boolean isAlertTriggered() {
+            return alertTriggered;
         }
     }
 
     @BeforeEach
     void setUp() throws IOException {
-        storage = new DataStorage(new FileDataReader("src/test/resources/test_data.txt"));
+        storage = DataStorage.getInstance(); // Use fresh instance
+        storage.clear(); // Clear previous data
+        FileDataReader reader = new FileDataReader("src/test/resources/test_data.txt");
+        storage = DataStorage.getInstance(reader); // Update with reader
         storage.readData();
-        outputStrategy = new TestOutputStrategy(); // Initialize the custom OutputStrategy
-        alertGenerator = new AlertGenerator(storage, outputStrategy); // Provide OutputStrategy
+        outputStrategy = new TestOutputStrategy();
+        alertGenerator = new AlertGenerator(storage, outputStrategy);
     }
 
     @Test
@@ -49,8 +57,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Critical: Systolic BP above 180 mmHg")),
-                   "Expected critical high systolic blood pressure alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Critical: Systolic BP above 180 mmHg")),
+                   "Expected critical high systolic blood pressure alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -59,8 +67,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Critical: Systolic BP below 90 mmHg")),
-                   "Expected critical low systolic blood pressure alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Critical: Systolic BP below 90 mmHg")),
+                   "Expected critical low systolic blood pressure alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -69,8 +77,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Critical: Diastolic BP above 110 mmHg")),
-                   "Expected critical high diastolic blood pressure alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Critical: Diastolic BP above 110 mmHg")),
+                   "Expected critical high diastolic blood pressure alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -79,8 +87,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Critical: Diastolic BP below 60 mmHg")),
-                   "Expected critical low diastolic blood pressure alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Critical: Diastolic BP below 60 mmHg")),
+                   "Expected critical low diastolic blood pressure alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -89,8 +97,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Trend: Three consecutive systolic BP increases > 10 mmHg")),
-                   "Expected systolic blood pressure trend alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Trend: Three consecutive systolic BP increases > 10 mmHg")),
+                   "Expected systolic blood pressure trend alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -99,8 +107,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Trend: Three consecutive diastolic BP increases > 10 mmHg")),
-                   "Expected diastolic blood pressure trend alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Trend: Three consecutive diastolic BP increases > 10 mmHg")),
+                   "Expected diastolic blood pressure trend alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -109,8 +117,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Low Blood Saturation: Below 92%")),
-                   "Expected low blood saturation alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Low Blood Saturation: Below 92%")),
+                   "Expected low blood saturation alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -119,8 +127,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Rapid Blood Saturation Drop: 5% or more in 10 minutes")),
-                   "Expected rapid saturation drop alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Rapid Blood Saturation Drop: 5% or more in 10 minutes")),
+                   "Expected rapid saturation drop alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -129,8 +137,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Hypotensive Hypoxemia: Low BP and Low Saturation")),
-                   "Expected hypotensive hypoxemia alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Hypotensive Hypoxemia: Low BP and Low Saturation")),
+                   "Expected hypotensive hypoxemia alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -139,8 +147,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Abnormal ECG Peak")),
-                   "Expected ECG peak alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Abnormal ECG Peak")),
+                   "Expected ECG peak alert with priority and repeat");
         outputStrategy.clear();
     }
 
@@ -149,8 +157,8 @@ public class AlertGeneratorTest {
         Patient patient = storage.getAllPatients().get(0);
         alertGenerator.evaluateData(patient);
         List<String> alerts = outputStrategy.getAlerts();
-        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("Manual Alert: Triggered")),
-                   "Expected triggered alert");
+        assertTrue(alerts.stream().anyMatch(alert -> alert.contains("[Priority 2] [Repeated 1 times] Manual Alert: Triggered")),
+                   "Expected triggered alert with priority and repeat");
         outputStrategy.clear();
     }
 }
