@@ -1,4 +1,3 @@
-
 package com.cardio_generator;
 
 import java.io.IOException;
@@ -6,18 +5,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Executors;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.cardio_generator.generators.AlertGenerator;
 import com.cardio_generator.generators.BloodLevelsDataGenerator;
 import com.cardio_generator.generators.BloodPressureDataGenerator;
+
 import com.cardio_generator.generators.BloodSaturationDataGenerator;
 import com.cardio_generator.generators.ECGDataGenerator;
+
+
+import com.cardio_generator.generators.PatientDataGenerator; // Added missing import
 import com.cardio_generator.outputs.ConsoleOutputStrategy;
 import com.cardio_generator.outputs.FileOutputStrategy;
 import com.cardio_generator.outputs.OutputStrategy;
@@ -45,6 +50,30 @@ public class HealthDataSimulator {
     /** A random number randomizer to mix things up when we start tasks. */
     private static final Random random = new Random();
 
+    private static HealthDataSimulator instance;
+    private PatientDataGenerator[] generators;
+
+    private HealthDataSimulator() {
+        // Initialize generators
+        generators = new PatientDataGenerator[] {
+            new ECGDataGenerator(patientCount),
+            new BloodSaturationDataGenerator(patientCount),
+
+
+            new BloodPressureDataGenerator(patientCount),
+            new BloodLevelsDataGenerator(patientCount),
+
+            new AlertGenerator(patientCount)
+        };
+    }
+
+    public static synchronized HealthDataSimulator getInstance() {
+        if (instance == null) {
+            instance = new HealthDataSimulator();
+        }
+        return instance;
+    }
+
     /**
      * Starts the whole program and sets everything up.
      * This is the main method we run to start making fake health data It looks at what we type
@@ -56,11 +85,17 @@ public class HealthDataSimulator {
      * @throws IOException if something goes wrong making folders for file output
      */
     public static void main(String[] args) throws IOException {
+        HealthDataSimulator simulator = HealthDataSimulator.getInstance();
+        simulator.start(args);
+    }
+
+    public void start(String[] args) throws IOException {
         parseArguments(args);
 
         scheduler = Executors.newScheduledThreadPool(patientCount * 4);
 
         List<Integer> patientIds = initializePatientIds(patientCount);
+
         Collections.shuffle(patientIds); // Randomize the order of patient IDs
 
         scheduleTasksForPatients(patientIds);
@@ -73,7 +108,7 @@ public class HealthDataSimulator {
      * @param args the words we typed in the command line
      * @throws IOException if it cant make a folder for file output
      */
-    private static void parseArguments(String[] args) throws IOException {
+    private void parseArguments(String[] args) throws IOException {
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "-h":
@@ -82,11 +117,11 @@ public class HealthDataSimulator {
                     break;
                 case "--patient-count":
                     if (i + 1 < args.length) {
+
                         try {
                             patientCount = Integer.parseInt(args[++i]);
                         } catch (NumberFormatException e) {
-                            System.err
-                                    .println("Error: Invalid number of patients. Using default value: " + patientCount);
+                            System.err.println("Error: Invalid number of patients. Using default value: " + patientCount);
                         }
                     }
                     break;
@@ -108,8 +143,7 @@ public class HealthDataSimulator {
                                 outputStrategy = new WebSocketOutputStrategy(port);
                                 System.out.println("WebSocket output will be on port: " + port);
                             } catch (NumberFormatException e) {
-                                System.err.println(
-                                        "Invalid port for WebSocket output. Please specify a valid port number.");
+                                System.err.println("Invalid port for WebSocket output. Please specify a valid port number.");
                             }
                         } else if (outputArg.startsWith("tcp:")) {
                             try {
@@ -138,7 +172,7 @@ public class HealthDataSimulator {
      * and what options we can use, like how many patients or where the data goes. It prints stuff
      * to the screen, which is the only thing it does besides that.
      */
-    private static void printHelp() {
+    private void printHelp() {
         System.out.println("Usage: java HealthDataSimulator [options]");
         System.out.println("Options:");
         System.out.println("  -h                       Show help and exit.");
@@ -162,7 +196,8 @@ public class HealthDataSimulator {
      * @return a list of numbers from 1 to patientCount for the patients
      * @throws IllegalArgumentException if patientCount is 0 or less 
      */
-    private static List<Integer> initializePatientIds(int patientCount) {
+    private List<Integer> initializePatientIds(int patientCount) {
+
         if (patientCount <= 0) {
             throw new IllegalArgumentException("Patient count must be positive");
         }
@@ -179,35 +214,30 @@ public class HealthDataSimulator {
      * @param patientIds the list of patient numbers we're making data for; can't be null or empty
      * @throws IllegalArgumentException if the patientIds list is null or empty
      */
-    private static void scheduleTasksForPatients(List<Integer> patientIds) {
+    private void scheduleTasksForPatients(List<Integer> patientIds) {
         if (patientIds == null || patientIds.isEmpty()) {
             throw new IllegalArgumentException("Patient IDs list must not be null or empty");
         }
-        ECGDataGenerator ecgDataGenerator = new ECGDataGenerator(patientCount);
-        BloodSaturationDataGenerator bloodSaturationDataGenerator = new BloodSaturationDataGenerator(patientCount);
-        BloodPressureDataGenerator bloodPressureDataGenerator = new BloodPressureDataGenerator(patientCount);
-        BloodLevelsDataGenerator bloodLevelsDataGenerator = new BloodLevelsDataGenerator(patientCount);
-        AlertGenerator alertGenerator = new AlertGenerator(patientCount);
-
         for (int patientId : patientIds) {
-            scheduleTask(() -> ecgDataGenerator.generate(patientId, outputStrategy), 1, TimeUnit.SECONDS);
-            scheduleTask(() -> bloodSaturationDataGenerator.generate(patientId, outputStrategy), 1, TimeUnit.SECONDS);
-            scheduleTask(() -> bloodPressureDataGenerator.generate(patientId, outputStrategy), 1, TimeUnit.MINUTES);
-            scheduleTask(() -> bloodLevelsDataGenerator.generate(patientId, outputStrategy), 2, TimeUnit.MINUTES);
-            scheduleTask(() -> alertGenerator.generate(patientId, outputStrategy), 20, TimeUnit.SECONDS);
+            scheduleTask(() -> generators[0].generate(patientId, outputStrategy), 1, TimeUnit.SECONDS); // ECG
+            scheduleTask(() -> generators[1].generate(patientId, outputStrategy), 1, TimeUnit.SECONDS); // Blood Saturation
+            scheduleTask(() -> generators[2].generate(patientId, outputStrategy), 1, TimeUnit.MINUTES); // Blood Pressure
+            scheduleTask(() -> generators[3].generate(patientId, outputStrategy), 2, TimeUnit.MINUTES); // Blood Levels
+            scheduleTask(() -> generators[4].generate(patientId, outputStrategy), 20, TimeUnit.SECONDS); // Alerts
         }
     }
 
     /**
      * Plans a task to run over and over with a little random wait at the start.
      *
-     * @param task the job we want to do, like making data; can't be null
+     * @param task the job we want to do, like making data cant be null
      * @param period how often to do the task, like every 1 second; has to be a positive number
      * @param timeUnit what kind of time we're using, like seconds or minutes; can't be null
      * @throws IllegalArgumentException if task or timeUnit is null, or if period isn't positive
      */
-    private static void scheduleTask(Runnable task, long period, TimeUnit timeUnit) {
+    private void scheduleTask(Runnable task, long period, TimeUnit timeUnit) {
         if (task == null) {
+
             throw new IllegalArgumentException("Task must not be null");
         }
         if (period <= 0) {

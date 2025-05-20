@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.alerts.AlertGenerator;
-import com.cardio_generator.outputs.ConsoleOutputStrategy; // Added import
-import com.cardio_generator.outputs.OutputStrategy; // Added import
+import com.cardio_generator.outputs.ConsoleOutputStrategy;
+import com.cardio_generator.outputs.OutputStrategy;
 
 /**
  * Manages storage and retrieval of patient data within a healthcare monitoring system.
@@ -16,12 +16,13 @@ import com.cardio_generator.outputs.OutputStrategy; // Added import
 public class DataStorage {
     private Map<Integer, Patient> patientMap; // Stores patient objects indexed by their unique patient ID.
     private DataReader reader; // Add field to store the DataReader
+    private static DataStorage instance; // Singleton instance
 
     /**
-     * Constructs a new instance of DataStorage with no DataReader.
+     * Private constructor to prevent direct instantiation.
      * Initializes the underlying storage structure.
      */
-    public DataStorage() {
+    private DataStorage() {
         this.patientMap = new HashMap<>();
     }
 
@@ -31,9 +32,38 @@ public class DataStorage {
      *
      * @param reader the DataReader used to read patient data into this storage
      */
-    public DataStorage(DataReader reader) {
+    private DataStorage(DataReader reader) {
         this.patientMap = new HashMap<>();
         this.reader = reader;
+    }
+
+    /**
+     * Provides access to the singleton instance of DataStorage.
+     * If no instance exists, it creates one with no DataReader.
+     *
+     * @return the singleton instance of DataStorage
+     */
+    public static synchronized DataStorage getInstance() {
+        if (instance == null) {
+            instance = new DataStorage();
+        }
+        return instance;
+    }
+
+    /**
+     * Provides access to the singleton instance of DataStorage with a specified DataReader.
+     * If no instance exists, it creates one with the given DataReader.
+     *
+     * @param reader the DataReader used to read patient data into this storage
+     * @return the singleton instance of DataStorage
+     */
+    public static synchronized DataStorage getInstance(DataReader reader) {
+        if (instance == null) {
+            instance = new DataStorage(reader);
+        } else {
+            instance.reader = reader; // Update reader if instance already exists
+        }
+        return instance;
     }
 
     /**
@@ -69,6 +99,16 @@ public class DataStorage {
     }
 
     /**
+     * Retrieves a Patient object for a specific patient ID.
+     *
+     * @param patientId the unique identifier of the patient
+     * @return the Patient object, or null if not found
+     */
+    public Patient getPatient(int patientId) {
+        return patientMap.get(patientId);
+    }
+
+    /**
      * Retrieves a list of PatientRecord objects for a specific patient, filtered by a time range.
      *
      * @param patientId the unique identifier of the patient whose records are to be retrieved
@@ -94,6 +134,13 @@ public class DataStorage {
     }
 
     /**
+     * Clears all patient data from the storage.
+     */
+    public void clear() {
+        patientMap.clear();
+    }
+
+    /**
      * The main method for the DataStorage class.
      * Initializes the system, reads data into storage using a FileDataReader, and continuously monitors
      * and evaluates patient data.
@@ -111,7 +158,7 @@ public class DataStorage {
         // Initialize the DataReader with the provided file path
         String filePath = args[0];
         DataReader reader = new FileDataReader(filePath);
-        DataStorage storage = new DataStorage(reader);
+        DataStorage storage = DataStorage.getInstance(reader);
 
         // Read data from the file into storage
         storage.readData();

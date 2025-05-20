@@ -2,7 +2,7 @@ package com.cardio_generator;
 
 import com.cardio_generator.outputs.*;
 import com.data_management.*;
-import com.alerts.AlertGenerator; // Added missing import
+import com.alerts.AlertGenerator; // missing  import
 import java.io.IOException;
 
 public class Main {
@@ -19,7 +19,7 @@ public class Main {
                 DataStorage.main(new String[]{});
                 break;
             case "HealthDataSimulator":
-                HealthDataSimulator.main(new String[]{});
+                HealthDataSimulator.main(args.length > 1 ? java.util.Arrays.copyOfRange(args, 1, args.length) : new String[]{});
                 break;
             case "ProcessFile":
                 if (args.length != 2) {
@@ -36,7 +36,7 @@ public class Main {
     }
 
     private static void processFile(String filePath) throws IOException {
-        DataStorage dataStorage = new DataStorage();
+        DataStorage dataStorage = DataStorage.getInstance(); // Use Singleton
         FileDataReader reader = new FileDataReader(filePath); // Pass the file path to the constructor
         reader.readData(dataStorage); // Call readData with only DataStorage
 

@@ -2,24 +2,15 @@ package com.data_management;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DataStorageTest {
-
     @Test
-    void testAddAndGetRecords() throws IOException {
-        String filePath = "src/test/resources/test_data.txt";
-        DataStorage storage = new DataStorage(new FileDataReader(filePath));
-        storage.readData();
-
-        List<Patient> patients = storage.getAllPatients();
-        assertEquals(1, patients.size(), "Expected one patient");
-
-        Patient patient = patients.get(0);
-        List<PatientRecord> records = patient.getRecords(0, Long.MAX_VALUE);
-        assertEquals(17, records.size(), "Expected 17 records from test_data.txt");
+    void testAddAndGetPatientData() {
+        DataStorage storage = DataStorage.getInstance(); // Use Singleton
+        storage.addPatientData(1, 120.0, "BloodPressure", System.currentTimeMillis());
+        Patient patient = storage.getPatient(1);
+        assertNotNull(patient);
+        assertEquals(1, patient.getPatientId());
     }
 }

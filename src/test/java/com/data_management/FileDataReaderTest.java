@@ -17,13 +17,13 @@ public class FileDataReaderTest {
 
     @BeforeEach
     void setUp() {
-        dataStorage = new DataStorage();
-        fileDataReader = new FileDataReader("dummy_path.txt"); // Fixed constructor call
+        dataStorage = DataStorage.getInstance();
+        dataStorage.clear(); // Reset data storage before each test
+        fileDataReader = new FileDataReader("dummy_path.txt");
     }
 
     @Test
     void testReadDataFromValidFile(@TempDir Path tempDir) throws IOException {
-        // Create a temporary test file
         Path tempFile = tempDir.resolve("test_data.txt");
         Files.write(tempFile, List.of(
             "1,190.0,BloodPressure,1714376789050",
@@ -31,10 +31,10 @@ public class FileDataReaderTest {
         ));
 
         fileDataReader = new FileDataReader(tempFile.toString());
-        fileDataReader.readData(dataStorage); // Fixed readData call
+        fileDataReader.readData(dataStorage);
 
         List<PatientRecord> records = dataStorage.getRecords(1, 0, Long.MAX_VALUE);
-        assertEquals(2, records.size());
+        assertEquals(2, records.size(), "Expected 2 records to be read");
         assertEquals(190.0, records.get(0).getMeasurementValue());
         assertEquals("BloodPressure", records.get(0).getRecordType());
         assertEquals(120.0, records.get(1).getMeasurementValue());
@@ -44,22 +44,23 @@ public class FileDataReaderTest {
     @Test
     void testReadDataWithInvalidFile() {
         fileDataReader = new FileDataReader("nonexistent_file.txt");
+        dataStorage.clear(); // Reset before test
         assertThrows(IOException.class, () -> {
-            fileDataReader.readData(dataStorage); // Fixed readData call
+            fileDataReader.readData(dataStorage);
         }, "Expected IOException for nonexistent file");
     }
 
     @Test
     void testReadDataWithMalformedData(@TempDir Path tempDir) throws IOException {
-        // Create a temporary test file with malformed data
         Path tempFile = tempDir.resolve("malformed_data.txt");
         Files.write(tempFile, List.of(
-            "1,abc,BloodPressure,1714376789050" // Invalid measurement value
+            "1,abc,BloodPressure,1714376789050"
         ));
 
         fileDataReader = new FileDataReader(tempFile.toString());
+        dataStorage.clear(); // Reset before test
         assertThrows(IllegalArgumentException.class, () -> {
-            fileDataReader.readData(dataStorage); // Fixed readData call
+            fileDataReader.readData(dataStorage);
         }, "Expected IllegalArgumentException for malformed data");
     }
 }
