@@ -1,16 +1,16 @@
 package com.data_management;
 
+import com.alerts.AlertGenerator;
+import com.cardio_generator.outputs.ConsoleOutputStrategy;
+import com.cardio_generator.outputs.WebSocketOutputStrategy;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.alerts.AlertGenerator;
-import com.cardio_generator.outputs.ConsoleOutputStrategy;
 
 /**
  * Manages storage and retrieval of patient data within a healthcare monitoring system.
@@ -19,6 +19,7 @@ public class DataStorage {
     private final Map<Integer, Patient> patientMap; // Stores patient objects indexed by their unique patient ID.
     private final ReentrantReadWriteLock lock; // Ensures thread-safe access to patientMap.
     private DataReader reader; // Add field to store the DataReader
+    private WebSocketOutputStrategy outputStrategy; // Add field for WebSocketOutputStrategy
     private static DataStorage instance; // Singleton instance
 
     private DataStorage() {
@@ -68,6 +69,11 @@ public class DataStorage {
         try {
             Patient patient = patientMap.computeIfAbsent(patientId, id -> new Patient(id));
             patient.addRecord(measurementValue, recordType, timestamp);
+
+            // Send data via WebSocketOutputStrategy if initialized
+            if (outputStrategy != null) {
+                outputStrategy.output(patientId, timestamp, recordType, String.valueOf(measurementValue));
+            }
         } finally {
             lock.writeLock().unlock();
         }
@@ -110,6 +116,9 @@ public class DataStorage {
         DataReader reader = new WebSocketClientImpl(serverUri);
         DataStorage storage = DataStorage.getInstance(reader);
 
+        // Initialize WebSocketOutputStrategy
+        storage.outputStrategy = new WebSocketOutputStrategy(8080);
+
         storage.startStreaming();
 
         AlertGenerator alertGenerator = new AlertGenerator(storage, new ConsoleOutputStrategy());
@@ -120,6 +129,7 @@ public class DataStorage {
             Thread.sleep(1000);
         }
     }
+
     public List<PatientRecord> getRecords(int patientId, int startTime, long endTime) {
         List<PatientRecord> records = new ArrayList<>();
         Patient patient = getPatient(patientId);
@@ -133,5 +143,14 @@ public class DataStorage {
         }
 
         return records;
+    }
+
+    // Utility method to check if a port is in use
+    private static boolean isPortInUse(int port) {
+        try (var socket = new java.net.ServerSocket(port)) {
+            return false;
+        } catch (IOException e) {
+            return true;
+        }
     }
 }
