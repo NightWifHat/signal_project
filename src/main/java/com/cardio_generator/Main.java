@@ -16,7 +16,12 @@ public class Main {
         String mode = args[0];
         switch (mode) {
             case "DataStorage":
-                DataStorage.main(new String[]{});
+                try {
+                    DataStorage.main(new String[]{});
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
                 break;
             case "HealthDataSimulator":
                 HealthDataSimulator.main(args.length > 1 ? java.util.Arrays.copyOfRange(args, 1, args.length) : new String[]{});

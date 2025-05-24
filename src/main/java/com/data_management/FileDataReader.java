@@ -10,6 +10,10 @@ import java.nio.file.Paths;
  * A DataReader implementation that reads patient data from a file.
  */
 public class FileDataReader implements DataReader {
+    @Override
+    public void startStreaming(DataStorage dataStorage) {
+        throw new UnsupportedOperationException("Streaming is not supported for FileDataReader.");
+    }
 
     private final String filePath;
 
