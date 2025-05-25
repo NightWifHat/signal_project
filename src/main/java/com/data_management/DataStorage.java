@@ -128,18 +128,12 @@ public class DataStorage {
             }
             Thread.sleep(1000);
         }
-    }
-
-    public List<PatientRecord> getRecords(int patientId, int startTime, long endTime) {
+    }    public List<PatientRecord> getRecords(int patientId, long startTime, long endTime) {
         List<PatientRecord> records = new ArrayList<>();
         Patient patient = getPatient(patientId);
 
         if (patient != null) {
-            for (PatientRecord record : patient.getRecords(startTime, endTime)) { // Pass arguments here
-                if (record.getTimestamp() >= startTime && record.getTimestamp() <= endTime) {
-                    records.add(record);
-                }
-            }
+            return patient.getRecords(startTime, endTime);
         }
 
         return records;
